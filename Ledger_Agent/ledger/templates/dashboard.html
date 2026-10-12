@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>My account</h1>
+<section class="balances">
+  {% for cur, amount in balances.items() %}
+  <div class="balance card" id="balance-{{ cur }}">
+    <div class="cur">{{ cur }}</div>
+    <div class="amt">{{ "{:,.2f}".format(amount) }}</div>
+  </div>
+  {% endfor %}
+</section>
+
+<div class="grid">
+  <section class="card">
+    <h2>Credit / Debit</h2>
+    <form method="post" action="{{ url_for('web.entry') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Operation
+        <select name="kind"><option value="credit">Credit (deposit)</option><option value="debit">Debit (withdraw)</option></select>
+      </label>
+      <label>Currency
+        <select name="currency">{% for c in currencies %}<option>{{ c }}</option>{% endfor %}</select>
+      </label>
+      <label>Amount <input name="amount" inputmode="decimal" required pattern="\d+(\.\d{1,2})?" placeholder="100.00"></label>
+      <label>Memo <input name="memo" maxlength="140"></label>
+      <button type="submit">Submit</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Transfer</h2>
+    <form method="post" action="{{ url_for('web.transfer') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Recipient username <input name="to_username" required maxlength="32"></label>
+      <label>Send from
+        <select name="from_currency">{% for c in currencies %}<option>{{ c }}</option>{% endfor %}</select>
+      </label>
+      <label>Recipient receives in
+        <select name="to_currency">{% for c in currencies %}<option>{{ c }}</option>{% endfor %}</select>
+      </label>
+      <label>Amount <input name="amount" inputmode="decimal" required pattern="\d+(\.\d{1,2})?" placeholder="50.00"></label>
+      <label>Memo <input name="memo" maxlength="140"></label>
+      <label class="check"><input type="checkbox" name="optimize" checked> Use optimized route (recommended)</label>
+      <p class="muted small">When currencies differ, the recipient is paid along the best-paying route.
+        <a href="{{ url_for('web.advisor') }}">See the conversion advisor</a>.</p>
+      <button type="submit">Transfer</button>
+    </form>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Exchange rates</h2>
+  {% include "_rates.html" %}
+</section>
+
+<section class="card">
+  <h2>Recent transactions</h2>
+  {% if transactions %}
+  <table>
+    <thead><tr><th>#</th><th>When</th><th>Type</th><th>Amount</th><th>Details</th><th>Memo</th></tr></thead>
+    <tbody>
+    {% for t in transactions %}
+      <tr>
+        <td>{{ t.id }}</td><td>{{ t.created_at }}</td>
+        {% if t.kind == 'TRANSFER' and t.incoming %}
+          <td class="pos">TRANSFER IN</td><td class="num pos">+{{ t.counter_amount }} {{ t.counter_currency }}</td>
+          <td>from {{ t.account_username }} ({{ t.amount }} {{ t.currency }} @ {{ t.rate }}{% if t.route %}, via {{ t.route|replace('>', ' → ') }}{% endif %})</td>
+        {% elif t.kind == 'TRANSFER' %}
+          <td class="neg">TRANSFER OUT</td><td class="num neg">-{{ t.amount }} {{ t.currency }}</td>
+          <td>to {{ t.counterparty_username }} ({{ t.counter_amount }} {{ t.counter_currency }} @ {{ t.rate }}{% if t.route %}, via {{ t.route|replace('>', ' → ') }}{% endif %})</td>
+        {% elif t.kind == 'CONVERT' %}
+          <td>CONVERT</td><td class="num">-{{ t.amount }} {{ t.currency }} / <span class="pos">+{{ t.counter_amount }} {{ t.counter_currency }}</span></td>
+          <td>via {{ t.route|replace('>', ' → ') }} (@ {{ t.rate }})</td>
+        {% elif t.kind == 'CREDIT' %}
+          <td class="pos">CREDIT</td><td class="num pos">+{{ t.amount }} {{ t.currency }}</td><td></td>
+        {% else %}
+          <td class="neg">DEBIT</td><td class="num neg">-{{ t.amount }} {{ t.currency }}</td><td></td>
+        {% endif %}
+        <td>{{ t.memo }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No transactions yet.</p>{% endif %}
+</section>
+{% endblock %}

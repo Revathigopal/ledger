@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Conversion advisor{% endblock %}
+{% block content %}
+<h1>Conversion advisor</h1>
+<p class="muted">Compares converting directly with routing through another currency, using the current
+exchange rates and rounding every hop to the cent exactly as a real conversion would.</p>
+
+{% if loops %}
+<div class="flash error" role="alert">
+  <strong>Cross-currency operations are suspended.</strong> The current rates contain a risk-free loop
+  ({{ loops[0].label }}, ×{{ "%.6f"|format(loops[0].factor) }}). An administrator must correct the rates.
+</div>
+{% endif %}
+
+<section class="card">
+  <form method="get" class="row-form" action="{{ url_for('web.advisor') }}">
+    <label>From
+      <select name="from">{% for c in currencies %}<option{% if c == form['from'] %} selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+    </label>
+    <label>To
+      <select name="to">{% for c in currencies %}<option{% if c == form['to'] %} selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+    </label>
+    <label>Amount <input name="amount" value="{{ form['amount'] }}" inputmode="decimal" required pattern="\d+(\.\d{1,2})?"></label>
+    <button type="submit">Compare routes</button>
+  </form>
+  {% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+</section>
+
+{% if plan %}
+{% set best = plan.best %}{% set direct = plan.direct %}
+<section class="card recommendation {{ 'gain' if plan.improves_on_direct else 'neutral' }}" id="recommendation">
+  <div class="rec-label">Recommendation</div>
+  {% if plan.improves_on_direct %}
+    <div class="rec-headline">Convert via <strong>{{ best.label }}</strong></div>
+    <div class="rec-figure">{{ "{:,.2f}".format(best.received) }} <span>{{ plan.target }}</span></div>
+    <p>You receive <strong>{{ "{:,.2f}".format(best.vs_direct) }} {{ plan.target }} more</strong>
+      (+{{ best.vs_direct_pct }}%) than the direct {{ direct.label }} conversion
+      ({{ "{:,.2f}".format(direct.received) }} {{ plan.target }}) for {{ "{:,.2f}".format(plan.amount) }} {{ plan.source }}.</p>
+  {% else %}
+    <div class="rec-headline">Convert <strong>directly</strong>: {{ direct.label }}</div>
+    <div class="rec-figure">{{ "{:,.2f}".format(direct.received) }} <span>{{ plan.target }}</span></div>
+    <p>No intermediate currency beats the direct rate for {{ "{:,.2f}".format(plan.amount) }} {{ plan.source }}.</p>
+  {% endif %}
+  {% if balances is not none %}
+  <div class="rec-actions">
+    <form method="post" action="{{ url_for('web.convert') }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="from" value="{{ plan.source }}"><input type="hidden" name="to" value="{{ plan.target }}">
+      <input type="hidden" name="amount" value="{{ plan.amount }}"><input type="hidden" name="route" value="best">
+      <button type="submit"{% if loops %} disabled{% endif %}>Convert my {{ plan.source }} using the recommended route</button>
+    </form>
+    {% if plan.improves_on_direct %}
+    <form method="post" action="{{ url_for('web.convert') }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="from" value="{{ plan.source }}"><input type="hidden" name="to" value="{{ plan.target }}">
+      <input type="hidden" name="amount" value="{{ plan.amount }}"><input type="hidden" name="route" value="direct">
+      <button type="submit" class="secondary"{% if loops %} disabled{% endif %}>Convert directly instead</button>
+    </form>
+    {% endif %}
+    <p class="muted small">Your balance: {{ "{:,.2f}".format(balances[plan.source]) }} {{ plan.source }} ·
+      {{ "{:,.2f}".format(balances[plan.target]) }} {{ plan.target }}. To send money to someone else along the
+      recommended route, tick “Use optimized route” on the <a href="{{ url_for('web.dashboard') }}">transfer form</a>.</p>
+  </div>
+  {% endif %}
+</section>
+
+<div class="grid">
+  <section class="card viz">
+    <h2>Route network</h2>
+    <p class="muted small">Every arrow is an exchange rate (1 unit of the arrow’s start = label × the arrow’s end).
+      The recommended route is highlighted with numbered steps{% if plan.improves_on_direct %}; the direct route is dashed{% endif %}.</p>
+    <svg viewBox="0 0 {{ network.w }} {{ network.h }}" class="chart network" role="img"
+         aria-label="Currency network. Recommended route: {{ best.label }}.">
+      <defs>
+        <marker id="arrow-muted" class="arrowhead muted" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="arrow-best" class="arrowhead best" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="arrow-direct" class="arrowhead direct" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      {% for e in network.edges %}
+      <g class="edge {{ e.state }}" data-tip="{{ e.tip }}" tabindex="0">
+        <title>{{ e.tip }}</title>
+        <line class="hit" x1="{{ e.x1 }}" y1="{{ e.y1 }}" x2="{{ e.x2 }}" y2="{{ e.y2 }}"/>
+        <line class="stroke" x1="{{ e.x1 }}" y1="{{ e.y1 }}" x2="{{ e.x2 }}" y2="{{ e.y2 }}" marker-end="url(#arrow-{{ e.state }})"/>
+        <text class="edge-label" x="{{ e.lx }}" y="{{ e.ly }}" text-anchor="middle" dominant-baseline="middle">{% if e.step %}{{ e.step }}. {% endif %}{{ e.label }}</text>
+      </g>
+      {% endfor %}
+      {% for n in network.nodes %}
+      <g class="node {{ n.role }}">
+        <circle cx="{{ n.x }}" cy="{{ n.y }}" r="{{ network.r }}"/>
+        {% if n.role in ('source', 'target') %}
+        <text x="{{ n.x }}" y="{{ n.y - 6 }}" text-anchor="middle" dominant-baseline="middle">{{ n.code }}</text>
+        <text class="node-role" x="{{ n.x }}" y="{{ n.y + 13 }}" text-anchor="middle" dominant-baseline="middle">{{ 'from' if n.role == 'source' else 'to' }}</text>
+        {% else %}
+        <text x="{{ n.x }}" y="{{ n.y }}" text-anchor="middle" dominant-baseline="middle">{{ n.code }}</text>
+        {% endif %}
+      </g>
+      {% endfor %}
+    </svg>
+    <ul class="legend">
+      <li><span class="swatch line best"></span>Recommended route</li>
+      {% if plan.improves_on_direct %}<li><span class="swatch line direct"></span>Direct route</li>{% endif %}
+      <li><span class="swatch line muted"></span>Other rates</li>
+    </ul>
+  </section>
+
+  <section class="card viz">
+    <h2>Gain vs direct conversion</h2>
+    <p class="muted small">{{ plan.target }} received by each route for {{ "{:,.2f}".format(plan.amount) }} {{ plan.source }},
+      compared with converting directly (the centre line).</p>
+    <svg viewBox="0 0 {{ bars.w }} {{ bars.h }}" class="chart bars" role="img"
+         aria-label="Bar chart of gain versus direct conversion for each route.">
+      <line class="baseline" x1="{{ bars.zero }}" y1="8" x2="{{ bars.zero }}" y2="{{ bars.h - 4 }}"/>
+      {% for r in bars.rows %}
+      <g class="bar-row {{ r.kind }}{% if r.best %} is-best{% endif %}" data-tip="{{ r.tip }}" tabindex="0">
+        <title>{{ r.tip }}</title>
+        <rect class="hit" x="0" y="{{ r.y - 6 }}" width="{{ bars.w }}" height="48"/>
+        <text class="row-label" x="0" y="{{ r.text_y }}" dominant-baseline="middle">{{ r.label }}</text>
+        {% if r.best %}<text class="best-tag" x="0" y="{{ r.text_y + 16 }}" dominant-baseline="middle">★ recommended</text>{% endif %}
+        {% if r.path %}<path class="bar" d="{{ r.path }}"/>{% else %}<rect class="tick" x="{{ bars.zero - 1 }}" y="{{ r.bar_y }}" width="2" height="20"/>{% endif %}
+        <text class="value" x="{{ bars.value_x }}" y="{{ r.text_y }}" dominant-baseline="middle">{{ r.value }}</text>
+      </g>
+      {% endfor %}
+    </svg>
+    <ul class="legend">
+      <li><span class="swatch better"></span>Pays more than direct</li>
+      <li><span class="swatch worse"></span>Pays less than direct</li>
+    </ul>
+  </section>
+</div>
+
+<section class="card">
+  <h2>All routes</h2>
+  <table class="routes">
+    <thead><tr><th>Rank</th><th>Route</th><th>Hop rates</th><th>Amounts after each hop</th><th class="num">You receive</th><th class="num">Effective rate</th><th class="num">vs direct</th></tr></thead>
+    <tbody>
+    {% for r in plan.routes %}
+      <tr{% if loop.first %} class="best-row"{% endif %}>
+        <td>{{ loop.index }}{% if loop.first %} ★{% endif %}</td>
+        <td>{{ r.label }}</td>
+        <td>{% for x in r.rates %}{{ fmt_rate(x) }}{% if not loop.last %} × {% endif %}{% endfor %}</td>
+        <td>{% for m in r.hop_minor %}{{ "{:,.2f}".format(m / 100) }} {{ r.path[loop.index0] }}{% if not loop.last %} → {% endif %}{% endfor %}</td>
+        <td class="num">{{ "{:,.2f}".format(r.received) }} {{ plan.target }}</td>
+        <td class="num">{{ fmt_rate(r.effective_rate) }}</td>
+        <td class="num">{% if r.is_direct %}—{% else %}{{ "{:+,.2f}".format(r.vs_direct) }} ({{ "{:+}".format(r.vs_direct_pct) }}%){% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<section class="card viz">
+  <h2>Where routing helps</h2>
+  <p class="muted small">For every currency pair: how much more the best route pays than the direct rate
+    (rates only, before rounding). Click a cell to analyse that pair.</p>
+  <table class="heatmap">
+    <thead><tr><th>From \ To</th>{% for c in heat.currencies %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for row in heat.rows %}
+      <tr><th>{{ row.base }}</th>
+      {% for cell in row.cells %}
+        {% if cell.diag %}<td class="diag">—</td>
+        {% else %}<td class="cell {{ cell.cls }}{% if cell.selected %} selected{% endif %}" data-tip="{{ cell.tip }}">
+          <a href="{{ url_for('web.advisor', **{'from': cell.base, 'to': cell.quote, 'amount': form['amount']}) }}">
+            <span class="pct">{{ cell.pct }}</span><span class="via">{{ cell.via }}</span></a></td>
+        {% endif %}
+      {% endfor %}</tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <ul class="legend">
+    {% for l in heat.legend %}<li><span class="swatch heat {{ l.cls }}"></span>{{ l.label }}</li>{% endfor %}
+  </ul>
+</section>
+<div id="viz-tooltip" class="viz-tooltip" role="tooltip" hidden></div>
+<script src="{{ url_for('static', filename='viz.js') }}" defer></script>
+{% endblock %}

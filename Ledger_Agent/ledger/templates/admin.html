@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<h1>Administration</h1>
+
+{% if arbitrage %}
+<div class="flash error" role="alert">
+  <strong>Arbitrage detected — cross-currency operations are suspended.</strong>
+  These loops return more than you start with, so users could create money by converting in a circle:
+  <ul>{% for lp in arbitrage %}<li>{{ lp.label }}: ×{{ "%.6f"|format(lp.factor) }}</li>{% endfor %}</ul>
+  Lower one of the rates on each loop to fix it. The <a href="{{ url_for('web.advisor') }}">conversion advisor</a> shows the routes.
+</div>
+{% endif %}
+
+<div class="grid">
+  <section class="card">
+    <h2>Create account</h2>
+    <form method="post" action="{{ url_for('web.admin_create_account') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Username <input name="username" required maxlength="32" pattern="[A-Za-z0-9_.\-]{3,32}"></label>
+      <label>Full name <input name="full_name" required maxlength="80"></label>
+      <label>Initial password <input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128"></label>
+      <label>Role <select name="role"><option value="user">user</option><option value="admin">admin</option></select></label>
+      <button type="submit">Create</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Update exchange rate</h2>
+    <form method="post" action="{{ url_for('web.admin_set_rate') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>From <select name="base">{% for c in currencies %}<option>{{ c }}</option>{% endfor %}</select></label>
+      <label>To <select name="quote">{% for c in currencies %}<option>{{ c }}</option>{% endfor %}</select></label>
+      <label>Rate (1 From = ? To) <input name="rate" required inputmode="decimal" placeholder="0.920000"></label>
+      <p class="muted small">Rates that would create a risk-free loop (arbitrage) are rejected, and the maximum safe value is shown.</p>
+      <button type="submit">Save rate</button>
+    </form>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Accounts</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Username</th><th>Name</th><th>Role</th>{% for c in currencies %}<th>{{ c }}</th>{% endfor %}<th>Created</th><th></th></tr></thead>
+    <tbody>
+    {% for item in accounts %}{% set a = item.account %}
+      <tr>
+        <td>{{ a.id }}</td><td>{{ a.username }}</td><td>{{ a.full_name }}</td><td>{{ a.role }}</td>
+        {% for c in currencies %}<td class="num">{% if c in item.balances %}{{ "{:,.2f}".format(item.balances[c]) }}{% else %}–{% endif %}</td>{% endfor %}
+        <td>{{ a.created_at }}</td>
+        <td>
+          {% if a.id != g.user.id %}
+          <form method="post" action="{{ url_for('web.admin_delete_account', account_id=a.id) }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="inline"><input type="checkbox" name="force"> force</label>
+            <button type="submit" class="danger">Delete</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2>Exchange rates <small class="muted">(persistent)</small></h2>
+  {% include "_rates.html" %}
+</section>
+
+<div class="grid">
+  <section class="card">
+    <h2>Rate history</h2>
+    <table>
+      <thead><tr><th>When</th><th>Pair</th><th>Old</th><th>New</th><th>By</th></tr></thead>
+      <tbody>{% for h in rate_history %}
+        <tr><td>{{ h.changed_at }}</td><td>{{ h.base }}→{{ h.quote }}</td><td class="num">{{ h.old_rate or '–' }}</td><td class="num">{{ h.new_rate }}</td><td>{{ h.changed_by }}</td></tr>
+      {% else %}<tr><td colspan="5" class="muted">No changes yet.</td></tr>{% endfor %}</tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>Audit log</h2>
+    <table>
+      <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Details</th></tr></thead>
+      <tbody>{% for e in audit %}
+        <tr><td>{{ e.created_at }}</td><td>{{ e.actor }}</td><td>{{ e.action }}</td><td>{{ e.details }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}

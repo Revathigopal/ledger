@@ -1,0 +1,8 @@
+<table class="rates">
+  <thead><tr><th>From</th><th>To</th><th>Rate</th><th>Updated</th><th>By</th></tr></thead>
+  <tbody>
+  {% for r in rates %}
+    <tr><td>{{ r.base }}</td><td>{{ r.quote }}</td><td class="num">{{ r.rate }}</td><td>{{ r.updated_at }}</td><td>{{ r.updated_by }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>

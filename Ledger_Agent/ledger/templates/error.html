@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Error {{ error.code }}{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>{{ error.code }} – {{ error.name }}</h1>
+  {% if error.code == 403 and g.user and not g.user.is_admin %}
+    <p>This page is for administrators. You are signed in as <strong>{{ g.user.username }}</strong>, a customer account.</p>
+    <form method="post" action="{{ url_for('web.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="next" value="admin">
+      <button type="submit">Log out and sign in as administrator</button>
+    </form>
+  {% else %}
+    <p>{{ error.description }}</p>
+  {% endif %}
+  <p><a href="{{ url_for('web.index') }}">Back to start</a></p>
+</section>
+{% endblock %}

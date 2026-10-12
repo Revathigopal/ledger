@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ "Administrator login" if admin_only else "Log in" }}{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <nav class="tabs" aria-label="Login type">
+    <a href="{{ url_for('web.login') }}"{% if not admin_only %} class="active" aria-current="page"{% endif %}>Customer login</a>
+    <a href="{{ url_for('web.admin_login') }}"{% if admin_only %} class="active" aria-current="page"{% endif %}>Admin login</a>
+  </nav>
+  <h1>{{ "Administrator login" if admin_only else "Customer login" }}</h1>
+  {% if g.user %}
+  <p class="muted">You are currently signed in as <strong>{{ g.user.username }}</strong>. Signing in here switches account.</p>
+  {% endif %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Username <input name="username" autocomplete="username" required maxlength="32"{% if admin_only %} value="{{ config.ADMIN_USERNAME }}"{% endif %}></label>
+    <label>Password <input name="password" type="password" autocomplete="current-password" required maxlength="128"></label>
+    <button type="submit">{{ "Log in as administrator" if admin_only else "Log in" }}</button>
+  </form>
+  {% if config.DEMO %}
+  <div class="hint">
+    <strong>Demo mode</strong><br>
+    {% if admin_only %}
+      Admin username: <code>{{ config.ADMIN_USERNAME }}</code>. The password is the
+      <code>LEDGER_ADMIN_PASSWORD</code> you set, or the one printed in the server console.
+    {% else %}
+      Customers: <code>alice</code> / <code>bob</code>, password <code>password123</code>.
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

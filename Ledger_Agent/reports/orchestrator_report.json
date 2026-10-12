@@ -1,0 +1,534 @@
+{
+  "generated_at": "2026-10-12T16:24:09+0530",
+  "python": "3.14.4",
+  "overall": "PASS",
+  "stages": [
+    {
+      "stage": "preflight",
+      "checks": [
+        {
+          "name": "Python >= 3.12",
+          "status": "PASS",
+          "detail": "3.14.4"
+        },
+        {
+          "name": "Flask installed",
+          "status": "PASS",
+          "detail": "pip install -r requirements.txt"
+        },
+        {
+          "name": "file exists: app.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: test.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: requirements.txt",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: README.md",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/__init__.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/db.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/services.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/guardrails.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/security.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/web.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/advisor.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/viz.py",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/static/viz.js",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "file exists: ledger/templates/advisor.html",
+          "status": "PASS",
+          "detail": ""
+        }
+      ],
+      "seconds": 0.0,
+      "status": "PASS"
+    },
+    {
+      "stage": "guardrails",
+      "checks": [
+        {
+          "name": "SQL uses parameterised constant strings only",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "no eval/exec/os.system/pickle/shell=True",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Flask debugger never enabled",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "no hard-coded SECRET_KEY",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "templates never disable auto-escaping",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "templates CSP-safe (no inline script/style/event handlers)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "every POST form includes a CSRF token",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "all non-public routes require login",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "all /admin routes require admin role",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "service.set_rate refuses rates that create arbitrage loops",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "service.convert suspends cross-currency moves under arbitrage",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "service.transfer suspends cross-currency moves under arbitrage",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "service.create_account enforces admin role",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "service.delete_account enforces admin role",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "service.set_rate enforces admin role",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "service.list_accounts enforces admin role",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "service.audit_log enforces admin role",
+          "status": "PASS",
+          "detail": ""
+        }
+      ],
+      "seconds": 0.05,
+      "status": "PASS"
+    },
+    {
+      "stage": "unit",
+      "checks": [
+        {
+          "name": "AccountAdminTests (12/12)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "AdvisorTests (9/9)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "AdvisorWebTests (11/11)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "AuthenticationTests (7/7)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "ConcurrencyTests (1/1)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "ConversionTests (9/9)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "CreditDebitTests (9/9)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "DatabaseTests (4/4)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "GuardrailTests (8/8)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "RateTests (4/4)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "TransferTests (10/10)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "WebGuiTests (15/15)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "WebSecurityTests (13/13)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "unittest suite",
+          "status": "PASS",
+          "detail": "113 tests in 48.738s"
+        }
+      ],
+      "seconds": 49.32,
+      "status": "PASS"
+    },
+    {
+      "stage": "e2e",
+      "checks": [
+        {
+          "name": "admin can log in",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "admin creates account 'alice'",
+          "status": "PASS",
+          "detail": "['Account &#39;alice&#39; created.']"
+        },
+        {
+          "name": "admin creates account 'bob'",
+          "status": "PASS",
+          "detail": "['Account &#39;bob&#39; created.']"
+        },
+        {
+          "name": "admin updates USD->INR rate to 80",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "alice logs in",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "credit in USD/EUR/INR + debit EUR",
+          "status": "PASS",
+          "detail": "['500.00', '149.50', '10000.00']"
+        },
+        {
+          "name": "overdraft rejected",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "cross-currency transfer USD->INR",
+          "status": "PASS",
+          "detail": "['Transferred 10 USD to bob (they received 800.00 INR at direct rate 80.000000).']"
+        },
+        {
+          "name": "recipient sees converted funds + history",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "advisor recommends USD \u2192 EUR \u2192 INR after the rate change, with charts",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "chart tooltip script served",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "convert own USD\u2192INR along recommended route (8,261.60 INR vs 8,000.00 direct)",
+          "status": "PASS",
+          "detail": "['Converted 100.00 USD into 8261.60 INR via USD \u2192 EUR \u2192 INR (effective rate 82.616).']"
+        },
+        {
+          "name": "rate that would create arbitrage is rejected",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "funded account needs force to delete",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "admin force-deletes account",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "deleted user's session ends",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "after restart: rate table persisted (USD->INR = 80)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "after restart: rate history persisted",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "after restart: in-memory accounts are gone",
+          "status": "PASS",
+          "detail": ""
+        }
+      ],
+      "seconds": 2.85,
+      "status": "PASS"
+    },
+    {
+      "stage": "security",
+      "checks": [
+        {
+          "name": "CSP header present",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "clickjacking protection (X-Frame-Options)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "MIME sniffing disabled",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Server banner hidden",
+          "status": "PASS",
+          "detail": "Server: Ledger  (use a production WSGI server/reverse proxy)"
+        },
+        {
+          "name": "anonymous GET /dashboard redirected to login",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "anonymous GET /admin redirected to login",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "anonymous GET /password redirected to login",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "Werkzeug debug console not exposed",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "login without CSRF token rejected (400)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "SQL injection login rejected: \"' OR '1'='1' --\"",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "SQL injection login rejected: \"admin'--\"",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "SQL injection login rejected: 'admin\" OR \"\"=\"'",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "stored XSS in full name is escaped",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "user cannot open admin page (403)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "user cannot create accounts (403)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "user cannot change rates (403)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "user cannot delete accounts (403)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "state change without CSRF token rejected (400)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "convert without CSRF token rejected (400)",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "advisor input reflected safely",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "guardrail rejects amount '-100'",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "guardrail rejects amount '1e9'",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "guardrail rejects amount 'NaN'",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "guardrail rejects amount '0.001'",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "guardrail rejects amount '99999999'",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "guardrail rejects unsupported currency",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "cannot transfer money you do not have",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "brute force triggers account lock-out",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "session cookie is HttpOnly",
+          "status": "PASS",
+          "detail": ""
+        }
+      ],
+      "seconds": 3.09,
+      "status": "PASS"
+    },
+    {
+      "stage": "scanners",
+      "checks": [
+        {
+          "name": "bandit",
+          "status": "PASS",
+          "detail": ""
+        },
+        {
+          "name": "pip-audit",
+          "status": "PASS",
+          "detail": "No known vulnerabilities found"
+        }
+      ],
+      "seconds": 2.5,
+      "status": "PASS"
+    }
+  ]
+}
